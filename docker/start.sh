@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-cd $(dirname "${BASH_SOURCE[0]}")/../..
-source bang/docker/utils.sh
+cd $(dirname "${BASH_SOURCE[0]}")/..
+source docker/utils.sh
 
 DEV_IMAGE="xiangquan/bang-algorithm:0.1"
 DEV_CONTAINER="bang-algorithm-${USER}"
