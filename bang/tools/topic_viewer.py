@@ -1,6 +1,7 @@
 from curses import wrapper
+import json
+import os
 import pprint
-import time
 
 from absl import app, flags, logging
 
@@ -9,11 +10,14 @@ from bang.common.topic import Topic
 
 flags.DEFINE_string('topic', None, 'Topic to view.')
 
+LAST_SCREEN = None
+
 
 def view_json(stdscr):
     for message in Topic.subscribe(flags.FLAGS.topic):
         stdscr.clear()
-        stdscr.addstr(pprint.format(json.loads(data)))
+        LAST_SCREEN = pprint.format(json.loads(message))
+        stdscr.addstr(LAST_SCREEN)
         stdscr.refresh()
 
 
@@ -24,7 +28,11 @@ def main(argv):
         # TODO(xiaoxq): Add image viewer.
     elif target_topic is not None:
         logging.info(F'Viewing topic {target_topic} as JSON.')
-        wrapper(view_json)
+        try:
+            wrapper(view_json)
+        except KeyboardInterrupt:
+            # Print the last screen before exit.
+            print(LAST_SCREEN)
 
 
 if __name__ == '__main__':

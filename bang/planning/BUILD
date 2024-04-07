@@ -3,8 +3,8 @@ load("@pip//:requirements.bzl", "requirement")
 package(default_visibility = ["//visibility:public"])
 
 py_binary(
-    name = "topic_viewer",
-    srcs = ["topic_viewer.py"],
+    name = "dragon_planner",
+    srcs = ["dragon_planner.py"],
     deps = [
         requirement("absl-py"),
         "//bang/common:topic",
