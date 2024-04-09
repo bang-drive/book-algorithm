@@ -1,5 +1,6 @@
 import json
 
+from absl import logging
 import redis
 
 
@@ -22,6 +23,7 @@ class Topic(object):
 
     @staticmethod
     def subscribe(topic):
+        logging.info(F'Subscribed to topic {topic}.')
         p = r.pubsub()
         p.subscribe(topic)
         for message in p.listen():

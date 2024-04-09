@@ -14,9 +14,10 @@ LAST_SCREEN = None
 
 
 def view_json(stdscr):
+    global LAST_SCREEN
     for message in Topic.subscribe(flags.FLAGS.topic):
         stdscr.clear()
-        LAST_SCREEN = pprint.format(json.loads(message))
+        LAST_SCREEN = pprint.pformat(json.loads(message))
         stdscr.addstr(LAST_SCREEN)
         stdscr.refresh()
 
@@ -32,6 +33,7 @@ def main(argv):
             wrapper(view_json)
         except KeyboardInterrupt:
             # Print the last screen before exit.
+            global LAST_SCREEN
             print(LAST_SCREEN)
 
 
