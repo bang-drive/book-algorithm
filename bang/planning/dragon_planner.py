@@ -7,7 +7,7 @@ from bang.common.topic import Topic
 
 
 PUBLISH_INTERVAL = 0.1
-SWITCH_SIDE_EVERY_N_SECONDS = 1
+SWITCH_SIDE_EVERY_N_SECONDS = 0.5
 
 
 def main(argv):
@@ -30,4 +30,7 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    app.run(main)
+    try:
+        app.run(main)
+    except KeyboardInterrupt:
+        pass
