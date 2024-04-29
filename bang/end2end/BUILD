@@ -4,14 +4,16 @@ load("//bang/tools:lint.bzl", "lint", "py_import_test")
 package(default_visibility = ["//visibility:public"])
 
 py_binary(
-    name = "dragon_planner",
-    srcs = ["dragon_planner.py"],
+    name = "data_recorder",
+    srcs = ["data_recorder.py"],
     deps = [
         requirement("absl-py"),
+        requirement("numpy"),
+        requirement("opencv-python"),
         "//bang/common:topic",
     ],
 )
 
-py_import_test("dragon_planner")
+py_import_test("data_recorder")
 
 lint()
