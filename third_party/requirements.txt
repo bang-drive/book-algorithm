@@ -1,2 +1,4 @@
 absl-py
+numpy
+opencv-python
 redis

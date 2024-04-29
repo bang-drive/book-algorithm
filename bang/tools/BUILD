@@ -7,6 +7,8 @@ py_binary(
     srcs = ["topic_viewer.py"],
     deps = [
         requirement("absl-py"),
+        requirement("numpy"),
+        requirement("opencv-python"),
         "//bang/common:topic",
     ],
 )

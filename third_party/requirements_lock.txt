@@ -1,3 +1,5 @@
 absl-py==2.1.0
-redis==5.0.3
+numpy==1.26.4
+opencv-python==4.9.0.80
+redis==5.0.4
 ## The following requirements were added by pip freeze:
