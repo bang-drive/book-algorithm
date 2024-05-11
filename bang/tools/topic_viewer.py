@@ -48,6 +48,11 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    if os.environ.get('TERMINFO') is None and os.path.exists('/usr/lib/terminfo'):
-        os.environ['TERMINFO'] = '/usr/lib/terminfo'
+    if os.environ.get('TERMINFO') is None:
+        term = os.environ.get('TERM', 'xterm-256color')
+        for path in ['/usr/lib/terminfo', '/usr/share/terminfo']:
+            terminfo = os.path.join(path, term[0], term)
+            if os.path.exists(terminfo):
+                os.environ['TERMINFO'] = path
+                break
     app.run(main)
