@@ -25,7 +25,7 @@ def main(argv):
             if steer != RIGHT:
                 logging.info('Turnning right.')
             steer = RIGHT
-        Topic.publish(Topic.CONTROL, {'source', 'dragon_planner', 'steer': steer, 'pedal': 32768})
+        Topic.publish(Topic.CONTROL, {'source': 'dragon_planner', 'steer': steer, 'pedal': 32768})
         time.sleep(PUBLISH_INTERVAL)
 
 

@@ -22,10 +22,15 @@ class Topic(object):
         r.publish(topic, data)
 
     @staticmethod
-    def subscribe(topic):
-        logging.info(F'Subscribed to topic {topic}.')
+    def subscribe(topics):
+        logging.info(F'Subscribed to topic {topics}.')
         p = r.pubsub()
-        p.subscribe(topic)
+        if isinstance(topics, str):
+            p.subscribe(topics)
+        else:
+            for topic in topics:
+                p.subscribe(topic)
+
         for message in p.listen():
             if message['type'] == 'message':
-                yield message['data']
+                yield message['channel'].decode(), message['data']
