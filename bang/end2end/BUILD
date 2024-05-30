@@ -16,4 +16,17 @@ py_binary(
 
 py_import_test("data_recorder")
 
+py_binary(
+    name = "balanced_sampling",
+    srcs = ["balanced_sampling.py"],
+    deps = [
+        requirement("absl-py"),
+        requirement("numpy"),
+        requirement("opencv-python"),
+        "//bang/common:topic",
+    ],
+)
+
+py_import_test("balanced_sampling")
+
 lint()
