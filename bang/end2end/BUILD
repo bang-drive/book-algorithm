@@ -7,10 +7,10 @@ py_binary(
     name = "data_recorder",
     srcs = ["data_recorder.py"],
     deps = [
+        "//bang/common:topic",
         requirement("absl-py"),
         requirement("numpy"),
         requirement("opencv-python"),
-        "//bang/common:topic",
     ],
 )
 
@@ -20,13 +20,21 @@ py_binary(
     name = "balanced_sampling",
     srcs = ["balanced_sampling.py"],
     deps = [
+        "//bang/common:topic",
         requirement("absl-py"),
         requirement("numpy"),
         requirement("opencv-python"),
-        "//bang/common:topic",
     ],
 )
 
 py_import_test("balanced_sampling")
+
+py_binary(
+    name = "train",
+    srcs = ["train.py"],
+    deps = [
+        requirement("absl-py"),
+    ],
+)
 
 lint()
