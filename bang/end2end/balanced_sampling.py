@@ -7,7 +7,8 @@ from absl import app, flags, logging
 
 
 # Sample data from <data_dir>/<label> to <data_dir>/.sampling/<label>
-flags.DEFINE_string('data_dir', '.', 'Directory to save images.')
+flags.DEFINE_string('data_dir', None, 'Directory to load images.')
+flags.mark_flag_as_required('data_dir')
 
 
 def main(argv):

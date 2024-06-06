@@ -12,7 +12,8 @@ from bang.common.topic import Topic
 
 
 # Save to <data_dir>/<label>/.../YYMMDD_HHMMSS_MS.jpg
-flags.DEFINE_string('data_dir', '.', 'Directory to save images.')
+flags.DEFINE_string('data_dir', None, 'Directory to save images.')
+flags.mark_flag_as_required('data_dir')
 
 
 SPEED_THRESHOLD = 8  # The full range is 0-16

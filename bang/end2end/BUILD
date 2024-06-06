@@ -34,7 +34,11 @@ py_binary(
     srcs = ["train.py"],
     deps = [
         requirement("absl-py"),
+	requirement("torch"),
+	requirement("torchvision"),
     ],
 )
+
+py_import_test("train")
 
 lint()
