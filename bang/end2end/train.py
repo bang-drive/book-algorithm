@@ -1,6 +1,12 @@
+import os
+import pprint
+
 from absl import app, flags, logging
 import torch
 import torchvision
+
+from bang.end2end.common import count_subdir_files
+
 
 # Save to <data_dir>/<label>/.../YYMMDD_HHMMSS_MS.jpg
 flags.DEFINE_string('data_dir', None, 'Directory to load images.')
@@ -12,9 +18,10 @@ BATCH_SIZE = 16
 
 
 def main(argv):
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
     # Data
+    logging.info('Train from data:')
+    pprint.pprint(count_subdir_files(flags.FLAGS.data_dir))
+
     dataset = torchvision.datasets.ImageFolder(
         flags.FLAGS.data_dir,
         transform=torchvision.transforms.Compose([
@@ -29,6 +36,7 @@ def main(argv):
     # Model
     model = torchvision.models.resnet18(weights='DEFAULT')
     model.fc = torch.nn.Linear(512, 3)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -57,6 +65,7 @@ def main(argv):
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
     logging.info(f'Accuracy: {correct / total}')
+    torch.save(model, os.path.join(os.path.dirname(__file__), 'model.pt'))
 
 
 if __name__ == '__main__':

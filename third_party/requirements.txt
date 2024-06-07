@@ -1,6 +1,7 @@
 absl-py
 numpy
 opencv-python
+pillow
 redis
 torch
 torchvision
