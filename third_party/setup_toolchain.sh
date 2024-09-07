@@ -9,6 +9,6 @@ sudo apt install -y \
     wget
 
 # Install Bazelisk.
-sudo wget -O /usr/bin/bazelisk https://github.com/bazelbuild/bazelisk/releases/download/v1.20.0/bazelisk-linux-amd64
+sudo wget -O /usr/bin/bazelisk https://github.com/bazelbuild/bazelisk/releases/download/v1.21.0/bazelisk-linux-amd64
 sudo chmod a+x /usr/bin/bazelisk
 sudo ln -sf /usr/bin/bazelisk /usr/bin/bazel

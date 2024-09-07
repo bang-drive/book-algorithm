@@ -24,8 +24,9 @@ class Topic(object):
     @staticmethod
     def subscribe(topics):
         logging.info(F'Subscribed to topic {topics}.')
+        single_mode = isinstance(topics, str)
         p = r.pubsub()
-        if isinstance(topics, str):
+        if single_mode:
             p.subscribe(topics)
         else:
             for topic in topics:
@@ -33,4 +34,4 @@ class Topic(object):
 
         for message in p.listen():
             if message['type'] == 'message':
-                yield message['channel'].decode(), message['data']
+                yield message['data'] if single_mode else (message['channel'].decode(), message['data'])

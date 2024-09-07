@@ -37,7 +37,7 @@ def camera_receiver():
         torchvision.transforms.ToTensor()])
 
     global CURRENT_STEER
-    for topic, message in Topic.subscribe([Topic.CAMERA]):
+    for message in Topic.subscribe(Topic.CAMERA):
         image = Image.open(io.BytesIO(message))
         # Mask off a rectangle at position (395, 520) and size (234, 56) which is the main car
         # itself.

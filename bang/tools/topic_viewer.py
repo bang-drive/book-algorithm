@@ -17,7 +17,7 @@ LAST_SCREEN = None
 
 def view_json(stdscr):
     global LAST_SCREEN
-    for _, message in Topic.subscribe(flags.FLAGS.topic):
+    for message in Topic.subscribe(flags.FLAGS.topic):
         stdscr.clear()
         LAST_SCREEN = pprint.pformat(json.loads(message))
         stdscr.addstr(LAST_SCREEN)
@@ -25,7 +25,7 @@ def view_json(stdscr):
 
 
 def view_image():
-    for _, message in Topic.subscribe(flags.FLAGS.topic):
+    for message in Topic.subscribe(flags.FLAGS.topic):
         image = cv2.imdecode(np.frombuffer(message, dtype=np.uint8), cv2.IMREAD_COLOR)
         cv2.imshow("Image", image)
         if cv2.waitKey(1) & 0xFF == ord('q'):

@@ -13,7 +13,7 @@ flags.DEFINE_string('data_dir', None, 'Directory to load images.')
 flags.mark_flag_as_required('data_dir')
 
 
-EPOCHS = 15
+EPOCHS = 10
 BATCH_SIZE = 16
 
 
@@ -47,8 +47,7 @@ def main(argv):
         for images, labels in train_loader:
             images, labels = images.to(device), labels.to(device)
             optimizer.zero_grad()
-            outputs = model(images)
-            loss = criterion(outputs, labels)
+            loss = criterion(model(images), labels)
             loss.backward()
             optimizer.step()
         logging.info(f'Epoch {epoch}, loss: {loss.item()}')
