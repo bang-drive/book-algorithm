@@ -6,3 +6,4 @@ pillow
 redis
 torch
 torchvision
+ultralytics
