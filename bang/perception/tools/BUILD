@@ -38,4 +38,18 @@ py_binary(
 
 py_import_test("warp_birds_eye_view")
 
+py_binary(
+    name = "yolo_viewer",
+    srcs = ["yolo_viewer.py"],
+    deps = [
+        "//bang/common:topic",
+        requirement("absl-py"),
+        requirement("numpy"),
+        requirement("opencv-python"),
+        requirement("ultralytics"),
+    ],
+)
+
+py_import_test("yolo_viewer")
+
 lint()

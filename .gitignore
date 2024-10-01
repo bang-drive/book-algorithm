@@ -1,4 +1,5 @@
 bazel-*
+bang/perception/models
 MODULE.bazel.lock
 
 # Byte-compiled / optimized / DLL files

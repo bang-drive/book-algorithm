@@ -6,7 +6,7 @@ pillow==10.4.0
 redis==5.1.0
 torch==2.4.1
 torchvision==0.19.1
-ultralytics==8.3.1
+ultralytics==8.3.2
 ## The following requirements were added by pip freeze:
 certifi==2024.8.30
 charset-normalizer==3.3.2
