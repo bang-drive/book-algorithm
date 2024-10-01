@@ -11,11 +11,19 @@ sudo apt install -y \
     wget
 
 # Install Bazelisk.
-sudo wget -O /usr/bin/bazelisk https://github.com/bazelbuild/bazelisk/releases/download/v1.21.0/bazelisk-linux-amd64
-sudo chmod a+x /usr/bin/bazelisk
-sudo ln -sf /usr/bin/bazelisk /usr/bin/bazel
+if ! [ -x "$(command -v bazelisk)" ]; then
+    sudo wget -O /usr/bin/bazelisk https://github.com/bazelbuild/bazelisk/releases/download/v1.22.0/bazelisk-linux-amd64
+    sudo chmod a+x /usr/bin/bazelisk
+    sudo ln -sf /usr/bin/bazelisk /usr/bin/bazel
+fi
 
 # No GPU available, resolve a local lock file instead of the managed GPU version.
 if ! [ -x "$(command -v nvidia-smi)" ]; then
     bash resolve_requirements.sh
+fi
+
+WKDIR=$(cd ..; pwd)
+if ! grep -q "${WKDIR}" ~/.bashrc; then
+    echo "export PYTHONPATH=\${PYTHONPATH}:${WKDIR}" >> ~/.bashrc
+    source ~/.bashrc
 fi
