@@ -24,14 +24,17 @@ fi
 git update-index --assume-unchanged requirements_lock.txt
 echo -n "" > requirements_lock.txt
 
+# TODO(xiaoxq): Torch on CUDA 12 has a known issue when working with Bazel. We need to wait for the fix.
+# https://github.com/pytorch/pytorch/issues/117350
+INDEX_URL="https://download.pytorch.org/whl/cu118"
 if [ ${CPU_ONLY} = true ]; then
-    # Preinstall torch-cpu before resolving requirements.txt.
     INDEX_URL="https://download.pytorch.org/whl/cpu"
-    python3 -m pip install torch torchvision --index-url "${INDEX_URL}"
-    echo "--extra-index-url ${INDEX_URL}" > requirements_lock.txt
 fi
-
+# Preinstall specific torch before resolving requirements.txt.
+python3 -m pip install torch torchvision --index-url "${INDEX_URL}"
 python3 -m pip install -U -r requirements.txt
+
+echo "--extra-index-url ${INDEX_URL}" > requirements_lock.txt
 python3 -m pip freeze -r requirements.txt >> requirements_lock.txt
 
 deactivate
