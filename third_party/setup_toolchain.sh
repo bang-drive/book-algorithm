@@ -17,13 +17,7 @@ if ! [ -x "$(command -v bazelisk)" ]; then
     sudo ln -sf /usr/bin/bazelisk /usr/bin/bazel
 fi
 
-# No GPU available, resolve a local lock file instead of the managed GPU version.
+# No GPU available, resolve a local CPU-only lock file instead of the managed GPU version.
 if ! [ -x "$(command -v nvidia-smi)" ]; then
     bash resolve_requirements.sh
-fi
-
-WKDIR=$(cd ..; pwd)
-if ! grep -q "${WKDIR}" ~/.bashrc; then
-    echo "export PYTHONPATH=\${PYTHONPATH}:${WKDIR}" >> ~/.bashrc
-    source ~/.bashrc
 fi
