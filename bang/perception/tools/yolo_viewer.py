@@ -43,6 +43,9 @@ class YoloModel(object):
 
     def process(self, image):
         results = self.yolo.predict(image, verbose=False)
+        # TODO(xiaoxq): Does plot work?
+        return cv2.cvtColor(results[0].plot(), cv2.COLOR_RGB2BGR)
+
         if self.task == 'seg':
             # TODO(xiaoxq): Implement segmentation viewer.
             pass
@@ -50,6 +53,7 @@ class YoloModel(object):
             # TODO(xiaoxq): Implement obb viewer.
             pass
         else:
+            # Default detection task.
             for result in results:
                 for box in result.boxes:
                     top_left = (int(box.xyxy[0][0]), int(box.xyxy[0][1]))
