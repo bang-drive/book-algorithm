@@ -43,22 +43,7 @@ class YoloModel(object):
 
     def process(self, image):
         results = self.yolo.predict(image, verbose=False)
-        if self.task == 'seg':
-            # TODO(xiaoxq): Implement segmentation viewer.
-            pass
-        elif self.task == 'obb':
-            # TODO(xiaoxq): Implement obb viewer.
-            pass
-        else:
-            for result in results:
-                for box in result.boxes:
-                    top_left = (int(box.xyxy[0][0]), int(box.xyxy[0][1]))
-                    bottom_right = (int(box.xyxy[0][2]), int(box.xyxy[0][3]))
-                    class_id = int(box.cls[0])
-                    label = F'{result.names[class_id]} ({float(box.conf):.2f})'
-                    cv2.rectangle(image, top_left, bottom_right, GREEN, 1)
-                    cv2.putText(image, label, (top_left[0], top_left[1] - 10), cv2.FONT_HERSHEY_PLAIN, 1, GREEN, 1)
-        return image
+        return results[0].plot()
 
 
 def main(argv):
@@ -73,7 +58,9 @@ def main(argv):
             image = cv2.imdecode(np.frombuffer(message, dtype=np.uint8), cv2.IMREAD_COLOR)
             image = yolo.process(image)
             cv2.imshow("Image", image)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            # Quit on ESC or 'q'.
+            key = cv2.waitKey(1) & 0xFF
+            if key == 27 or key == ord('q'):
                 break
 
 
