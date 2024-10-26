@@ -4,10 +4,6 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 VENV_DIR="/tmp/venv-$(date +%Y%m%d-%H%M%S)"
 
-if ! [ -x "$(command -v pip)" ]; then
-    sudo apt install -y python3-pip python3-venv
-fi
-
 if [ ! -d "${VENV_DIR}" ]; then
     python3 -m venv "${VENV_DIR}"
 fi
@@ -24,9 +20,7 @@ fi
 git update-index --assume-unchanged requirements_lock.txt
 echo -n "" > requirements_lock.txt
 
-# TODO(xiaoxq): Torch on CUDA 12 has a known issue when working with Bazel. We need to wait for the fix.
-# https://github.com/pytorch/pytorch/issues/117350
-INDEX_URL="https://download.pytorch.org/whl/cu118"
+INDEX_URL="https://download.pytorch.org/whl/cu124"
 if [ ${CPU_ONLY} = true ]; then
     INDEX_URL="https://download.pytorch.org/whl/cpu"
 fi

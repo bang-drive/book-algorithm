@@ -17,7 +17,17 @@ if ! [ -x "$(command -v bazelisk)" ]; then
     sudo ln -sf /usr/bin/bazelisk /usr/bin/bazel
 fi
 
-# No GPU available, resolve a local CPU-only lock file instead of the managed GPU version.
-if ! [ -x "$(command -v nvidia-smi)" ]; then
+if [ -x "$(command -v nvidia-smi)" ]; then
+    # Decouple CUDA version from the system default as we want to align with the latest PyTorch instead of Ubuntu.
+    PREFIX="/usr/local/miniconda"
+    CONDA="${PREFIX}/bin/conda"
+    if [ ! -x "${CONDA}" ]; then
+        wget -O conda.sh https://repo.anaconda.com/miniconda/Miniconda3-py312_24.9.2-0-Linux-x86_64.sh
+        sudo bash conda.sh -b -p "${PREFIX}"
+        rm -f conda.sh
+    fi
+    sudo "${CONDA}" install -y cudnn nccl ncurses -c conda-forge
+else
+    # No GPU available, resolve a local CPU-only lock file instead of the managed GPU version.
     bash resolve_requirements.sh
 fi
