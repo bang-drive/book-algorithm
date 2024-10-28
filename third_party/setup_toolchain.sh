@@ -27,6 +27,7 @@ if [ -x "$(command -v nvidia-smi)" ]; then
         rm -f conda.sh
     fi
     sudo "${CONDA}" install -y cudnn nccl ncurses -c conda-forge
+    echo "export LD_LIBRARY_PATH=\${LD_LIBRARY_PATH}:${PREFIX}/lib" >> ~/.bashrc
 else
     # No GPU available, resolve a local CPU-only lock file instead of the managed GPU version.
     bash resolve_requirements.sh

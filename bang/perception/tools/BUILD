@@ -44,6 +44,7 @@ py_binary(
     deps = [
         "//bang/common:topic",
         requirement("absl-py"),
+        requirement("lapx"),
         requirement("numpy"),
         requirement("opencv-python"),
         requirement("ultralytics"),

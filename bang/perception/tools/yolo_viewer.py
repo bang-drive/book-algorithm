@@ -10,7 +10,7 @@ from bang.common.topic import Topic
 
 flags.DEFINE_string('model', None, 'Yolo model path.')
 flags.DEFINE_string('image', None, 'Image path for static detection, otherwise use live camera topic.')
-flags.DEFINE_enum('task', 'auto', ['auto', 'seg', 'obb'], 'Prediction task type.')
+flags.DEFINE_enum('task', 'auto', ['auto', 'seg', 'obb', 'track'], 'Prediction task type.')
 
 GREEN = (0, 255, 0)
 MODEL_SIZE = 'x'  # n, s, m, l, x
@@ -35,14 +35,18 @@ class YoloModel(object):
         elif flags.FLAGS.model is None:
             # Decide with specified task.
             self.task = flags.FLAGS.task
-            self.yolo = YOLO(F'{models_dir}/yolo11{MODEL_SIZE}-{self.task}.pt')
+            if self.task == 'track':
+                self.yolo = YOLO(F'{models_dir}/yolo11{MODEL_SIZE}.pt')
+            else:
+                self.yolo = YOLO(F'{models_dir}/yolo11{MODEL_SIZE}-{self.task}.pt')
         else:
             # All specified.
             self.task = flags.FLAGS.task
             self.yolo = YOLO(flags.FLAGS.model)
 
     def process(self, image):
-        results = self.yolo.predict(image, verbose=False)
+        results = (self.yolo.predict(image, verbose=False) if self.task != 'track' else
+                   self.yolo.track(image, verbose=False))
         return results[0].plot()
 
 

@@ -1,5 +1,6 @@
 absl-py
 getkey
+lapx
 numpy
 opencv-python
 pillow
