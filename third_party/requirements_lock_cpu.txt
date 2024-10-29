@@ -1,13 +1,14 @@
 --extra-index-url https://download.pytorch.org/whl/cpu
 absl-py==2.1.0
 getkey==0.6.5
+lapx==0.5.11
 numpy==2.1.2
 opencv-python==4.10.0.84
 pillow==11.0.0
 redis==5.2.0
-torch==2.5.0+cpu
-torchvision==0.20.0+cpu
-ultralytics==8.3.23
+torch==2.5.1+cpu
+torchvision==0.20.1+cpu
+ultralytics==8.3.24
 ## The following requirements were added by pip freeze:
 certifi==2024.8.30
 charset-normalizer==3.4.0
@@ -37,7 +38,7 @@ seaborn==0.13.2
 setuptools==70.0.0
 six==1.16.0
 sympy==1.13.1
-tqdm==4.66.5
+tqdm==4.66.6
 typing_extensions==4.9.0
 tzdata==2024.2
 ultralytics-thop==2.0.9

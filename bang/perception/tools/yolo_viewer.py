@@ -10,7 +10,7 @@ from bang.common.topic import Topic
 
 flags.DEFINE_string('model', None, 'Yolo model path.')
 flags.DEFINE_string('image', None, 'Image path for static detection, otherwise use live camera topic.')
-flags.DEFINE_enum('task', 'auto', ['auto', 'seg', 'obb', 'track'], 'Prediction task type.')
+flags.DEFINE_enum('task', 'auto', ['auto', 'detect', 'seg', 'obb', 'track'], 'Prediction task type.')
 
 GREEN = (0, 255, 0)
 MODEL_SIZE = 'x'  # n, s, m, l, x
@@ -18,7 +18,7 @@ MODEL_SIZE = 'x'  # n, s, m, l, x
 
 class YoloModel(object):
     def __init__(self):
-        models_dir = os.path.join(os.path.dirname(__file__), '../models')
+        models_dir = os.path.expanduser('~/.cache/yolo-models')
         if flags.FLAGS.task == 'auto' and flags.FLAGS.model is None:
             # All default.
             self.task = 'detect'
@@ -35,7 +35,7 @@ class YoloModel(object):
         elif flags.FLAGS.model is None:
             # Decide with specified task.
             self.task = flags.FLAGS.task
-            if self.task == 'track':
+            if self.task in {'detect', 'track'}:
                 self.yolo = YOLO(F'{models_dir}/yolo11{MODEL_SIZE}.pt')
             else:
                 self.yolo = YOLO(F'{models_dir}/yolo11{MODEL_SIZE}-{self.task}.pt')
