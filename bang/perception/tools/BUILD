@@ -53,4 +53,17 @@ py_binary(
 
 py_import_test("yolo_viewer")
 
+py_binary(
+    name = "bev_viewer",
+    srcs = ["bev_viewer.py"],
+    deps = [
+        "//bang/common:topic",
+        requirement("absl-py"),
+        requirement("numpy"),
+        requirement("opencv-python"),
+    ],
+)
+
+py_import_test("bev_viewer")
+
 lint()
