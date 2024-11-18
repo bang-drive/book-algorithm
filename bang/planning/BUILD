@@ -7,8 +7,8 @@ py_binary(
     name = "dragon_planner",
     srcs = ["dragon_planner.py"],
     deps = [
-        requirement("absl-py"),
         "//bang/common:topic",
+        requirement("absl-py"),
     ],
 )
 

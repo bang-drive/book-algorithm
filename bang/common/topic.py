@@ -14,6 +14,7 @@ class Topic(object):
     CAMERA = '/bang/camera'
     CHASSIS = '/bang/chassis'
     CONTROL = '/bang/control'
+    PERCEPTION = '/bang/perception'
 
     @staticmethod
     def publish(topic, data):

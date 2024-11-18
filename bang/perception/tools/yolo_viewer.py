@@ -12,7 +12,6 @@ flags.DEFINE_string('model', None, 'Yolo model path.')
 flags.DEFINE_string('image', None, 'Image path for static detection, otherwise use live camera topic.')
 flags.DEFINE_enum('task', 'auto', ['auto', 'detect', 'seg', 'obb', 'track'], 'Prediction task type.')
 
-GREEN = (0, 255, 0)
 MODEL_SIZE = 'x'  # n, s, m, l, x
 
 
