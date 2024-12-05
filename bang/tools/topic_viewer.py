@@ -18,8 +18,12 @@ LAST_SCREEN = None
 def view_json(stdscr):
     global LAST_SCREEN
     for message in Topic.subscribe(flags.FLAGS.topic):
+        data = json.loads(message)
+        if flags.FLAGS.topic == Topic.PERCEPTION:
+            data['data'] = '<mask>'
+
         stdscr.clear()
-        LAST_SCREEN = pprint.pformat(json.loads(message))
+        LAST_SCREEN = pprint.pformat(data)
         stdscr.addstr(LAST_SCREEN)
         stdscr.refresh()
 
