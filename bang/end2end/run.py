@@ -1,17 +1,17 @@
 import io
 import os
 import threading
-import time
 
 from absl import app, logging
 from PIL import Image
 import torch
 import torchvision
 
+from bang.common.timer import RecurringTimer
 from bang.common.topic import Topic
 
 
-CONTROL_PUBLISH_INTERVAL = 0.1
+CONTROL_FREQUENCY = 10
 CONTROL_MAX = 32768
 STEER_VALUES = {
     'LEFT': -CONTROL_MAX,
@@ -53,14 +53,15 @@ def camera_receiver():
 
 def control_publisher():
     global CURRENT_STEER
+    timer = RecurringTimer(1.0 / CONTROL_FREQUENCY)
     while True:
+        timer.wait()
         Topic.publish(Topic.CONTROL, {
             'source': 'end2end',
             'pedal': CONTROL_MAX,
             'steer': STEER_VALUES[CURRENT_STEER],
         })
         logging.info(CURRENT_STEER)
-        time.sleep(CONTROL_PUBLISH_INTERVAL)
 
 
 def main(argv):

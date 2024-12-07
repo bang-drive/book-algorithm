@@ -52,6 +52,7 @@ py_binary(
     srcs = ["run.py"],
     data = ["model.pt"],
     deps = [
+        "//bang/common:timer",
         "//bang/common:topic",
         requirement("absl-py"),
         requirement("pillow"),
