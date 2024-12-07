@@ -20,7 +20,7 @@ def view_json(stdscr):
     for message in Topic.subscribe(flags.FLAGS.topic):
         data = json.loads(message)
         if flags.FLAGS.topic == Topic.PERCEPTION:
-            data['data'] = '<mask>'
+            data['road_mask'] = '<road_mask>'
 
         stdscr.clear()
         LAST_SCREEN = pprint.pformat(data)

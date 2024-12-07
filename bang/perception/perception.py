@@ -10,10 +10,14 @@ from bang.common.topic import Topic
 
 flags.DEFINE_boolean('show', False, 'Show results.')
 
+MODEL = os.path.expanduser('~/.cache/yolo-models/yolo11x.pt')
+
 BLACK = (0, 0, 0)
 RED = (0, 0, 255)
 GREEN = (0, 255, 0)
 YELLOW = (0, 255, 255)
+ROAD_COLOR_LOWER_HSV = np.array([101, 3, 71])
+ROAD_COLOR_UPPER_HSV = np.array([165, 46, 167])
 
 SRC_WIDTH = 1024
 SRC_HEIGHT = 576
@@ -26,10 +30,8 @@ BEV_SLOPE = 0.1
 PADDING = int(BEV_H / BEV_SLOPE) + BEV_A // 2 - SRC_WIDTH // 2
 OBSTABLE_SIZE = (20, 40)
 
-ROAD_COLOR_LOWER_HSV = np.array([101, 3, 71])
-ROAD_COLOR_UPPER_HSV = np.array([165, 46, 167])
-
-MODEL = os.path.expanduser('~/.cache/yolo-models/yolo11x.pt')
+# distance = pixel / scale. So the chasiss position and speed can be converted to pixel space or vice versa.
+SCALE = 16.96
 
 
 class Perception(object):
@@ -51,18 +53,28 @@ class Perception(object):
 
     def process(self, image):
         obstacles = self.detect_obstacles(image)
-        image = self.wrap_bev(image)
-        mask, image = self.mark_road(image)
-
+        bev_image = self.wrap_bev(image)
+        road_mask, ref_line = self.mark_road(bev_image)
         if flags.FLAGS.show:
+            bev_image[road_mask == 255] = GREEN
+            bev_image[road_mask != 255] = BLACK
+
             for x, y in obstacles:
                 top_left = (x - OBSTABLE_SIZE[0] // 2, y - OBSTABLE_SIZE[1])
                 bot_right = (x + OBSTABLE_SIZE[0] // 2, y)
-                cv2.rectangle(image, top_left, bot_right, RED, -1)
-            cv2.rectangle(image, (DST_WIDTH // 2 - 10, DST_HEIGHT - 20), (DST_WIDTH // 2 + 10, DST_HEIGHT), YELLOW, -1)
-        for x, y in obstacles:
-            mask[y, x] = 1
-        return mask, image
+                cv2.rectangle(bev_image, top_left, bot_right, RED, -1)
+            cv2.rectangle(bev_image, (DST_WIDTH // 2 - 10, DST_HEIGHT - 20), (DST_WIDTH // 2 + 10, DST_HEIGHT),
+                          YELLOW, -1)
+
+        Topic.publish(Topic.PERCEPTION, {
+            'width': DST_WIDTH,
+            'height': DST_HEIGHT,
+            'road_mask': road_mask.tolist(),
+            'reference_line': ref_line.tolist(),
+            'obstacles': obstacles,
+            'scale': SCALE,
+        })
+        return bev_image
 
     def xy2bev(self, x, y):
         point = np.array([x + PADDING, y, 1], dtype=np.float32)
@@ -93,10 +105,35 @@ class Perception(object):
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
         # Smooth the mask.
         mask = cv2.GaussianBlur(mask, (9, 9), 0)
-        if flags.FLAGS.show:
-            image[mask == 255] = GREEN
-            image[mask != 255] = BLACK
-        return mask, image
+
+        # Regression for reference line.
+        X = []
+        Y = []
+        min_width = 100
+        for y in range(150, 350, 20):
+            left = 0
+            right = DST_WIDTH - 1
+            count = 0
+            while left < right:
+                while mask[y, left] != 255 and left < right:
+                    left += 1
+                while mask[y, right] != 255 and left < right:
+                    right -= 1
+                left += 1
+                right -= 1
+                count += 2
+            if count > min_width:
+                X.append(left)
+                Y.append(y)
+
+        ref_line = np.empty(0)
+        if len(X) > 2:
+            ref_line = np.polyfit(Y, X, 2)
+            model = np.poly1d(ref_line)
+            for y in range(0, DST_HEIGHT, 20):
+                x = max(min(int(model(y)), DST_WIDTH - 1), 0)
+                mask[y, x] = 0
+        return mask, ref_line
 
 
 def main(argv):
@@ -108,14 +145,9 @@ def main(argv):
         # Mark the upper half as black.
         image[:image.shape[0] // 2, :] = BLACK
 
-        mask, image = perception.process(image)
-        Topic.publish(Topic.PERCEPTION, {
-            'data': mask.tolist(),
-            'width': DST_WIDTH,
-            'height': DST_HEIGHT,
-        })
+        bev_image = perception.process(image)
         if flags.FLAGS.show:
-            cv2.imshow("Image", image)
+            cv2.imshow("Image", bev_image)
             key = cv2.waitKey(1) & 0xFF
             if key == 27 or key == ord('q'):
                 break
