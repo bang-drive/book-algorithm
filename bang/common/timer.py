@@ -21,3 +21,4 @@ class RecurringTimer(object):
         if (seconds := self.remain()) > 0:
             time.sleep(seconds)
             self.last_time = datetime.now()
+        return True

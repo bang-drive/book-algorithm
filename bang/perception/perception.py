@@ -1,15 +1,18 @@
 import os
+import threading
 
 from absl import app, flags
 from ultralytics import YOLO
 import cv2
 import numpy as np
 
+from bang.common.timer import RecurringTimer
 from bang.common.topic import Topic
 
 
 flags.DEFINE_boolean('show', False, 'Show results.')
 
+PERCEPTION_FREQUENCY = 10
 MODEL = os.path.expanduser('~/.cache/yolo-models/yolo11x.pt')
 
 BLACK = (0, 0, 0)
@@ -50,11 +53,39 @@ class Perception(object):
         self.M = cv2.getPerspectiveTransform(src_vertice, dst_vertice)
 
         self.yolo = YOLO(MODEL)
+        self.message = None
+        self.message_lock = threading.Lock()
 
-    def process(self, image):
+    def message_receiver(self):
+        for message in Topic.subscribe(Topic.CAMERA):
+            with self.message_lock:
+                self.message = message
+
+    def parse_message(self):
+        with self.message_lock:
+            return cv2.imdecode(np.frombuffer(self.message, dtype=np.uint8), cv2.IMREAD_COLOR) if self.message else None
+
+    def process(self):
+        image = self.parse_message()
+        if image is None:
+            return None
+        # Mask off a rectangle at position (395, 520) and size (234, 56) which is the main car itself.
+        image = cv2.rectangle(image, (395, 520), (395 + 234, 520 + 56), BLACK, -1)
+        # Mark the upper half as black.
+        image[:image.shape[0] // 2, :] = BLACK
+
         obstacles = self.detect_obstacles(image)
         bev_image = self.wrap_bev(image)
         road_mask, ref_line = self.mark_road(bev_image)
+        Topic.publish(Topic.PERCEPTION, {
+            'width': DST_WIDTH,
+            'height': DST_HEIGHT,
+            'road_mask': road_mask.tolist(),
+            'reference_line': ref_line.tolist(),
+            'obstacles': obstacles,
+            'scale': SCALE,
+        })
+
         if flags.FLAGS.show:
             bev_image[road_mask == 255] = GREEN
             bev_image[road_mask != 255] = BLACK
@@ -66,14 +97,12 @@ class Perception(object):
             cv2.rectangle(bev_image, (DST_WIDTH // 2 - 10, DST_HEIGHT - 20), (DST_WIDTH // 2 + 10, DST_HEIGHT),
                           YELLOW, -1)
 
-        Topic.publish(Topic.PERCEPTION, {
-            'width': DST_WIDTH,
-            'height': DST_HEIGHT,
-            'road_mask': road_mask.tolist(),
-            'reference_line': ref_line.tolist(),
-            'obstacles': obstacles,
-            'scale': SCALE,
-        })
+            model = np.poly1d(ref_line)
+            for y1 in range(0, DST_HEIGHT - 10, 20):
+                x1 = max(min(int(model(y1)), DST_WIDTH - 1), 0)
+                y2 = y1 + 10
+                x2 = max(min(int(model(y2)), DST_WIDTH - 1), 0)
+                cv2.line(bev_image, (x1, y1), (x2, y2), RED, 1)
         return bev_image
 
     def xy2bev(self, x, y):
@@ -125,28 +154,18 @@ class Perception(object):
             if count > min_width:
                 X.append(left)
                 Y.append(y)
-
-        ref_line = np.empty(0)
-        if len(X) > 2:
-            ref_line = np.polyfit(Y, X, 2)
-            model = np.poly1d(ref_line)
-            for y in range(0, DST_HEIGHT, 20):
-                x = max(min(int(model(y)), DST_WIDTH - 1), 0)
-                mask[y, x] = 0
+        ref_line = np.polyfit(Y, X, 2) if len(X) > 2 else np.empty(0)
         return mask, ref_line
 
 
 def main(argv):
     perception = Perception()
-    for message in Topic.subscribe(Topic.CAMERA):
-        image = cv2.imdecode(np.frombuffer(message, dtype=np.uint8), cv2.IMREAD_COLOR)
-        # Mask off a rectangle at position (395, 520) and size (234, 56) which is the main car itself.
-        image = cv2.rectangle(image, (395, 520), (395 + 234, 520 + 56), BLACK, -1)
-        # Mark the upper half as black.
-        image[:image.shape[0] // 2, :] = BLACK
+    threading.Thread(target=perception.message_receiver).start()
 
-        bev_image = perception.process(image)
-        if flags.FLAGS.show:
+    timer = RecurringTimer(1.0 / PERCEPTION_FREQUENCY)
+    while timer.wait():
+        bev_image = perception.process()
+        if flags.FLAGS.show and bev_image is not None:
             cv2.imshow("Image", bev_image)
             key = cv2.waitKey(1) & 0xFF
             if key == 27 or key == ord('q'):

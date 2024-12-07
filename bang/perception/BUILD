@@ -7,6 +7,7 @@ py_binary(
     name = "perception",
     srcs = ["perception.py"],
     deps = [
+        "//bang/common:timer",
         "//bang/common:topic",
         requirement("absl-py"),
         requirement("numpy"),

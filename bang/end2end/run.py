@@ -54,8 +54,7 @@ def camera_receiver():
 def control_publisher():
     global CURRENT_STEER
     timer = RecurringTimer(1.0 / CONTROL_FREQUENCY)
-    while True:
-        timer.wait()
+    while timer.wait():
         Topic.publish(Topic.CONTROL, {
             'source': 'end2end',
             'pedal': CONTROL_MAX,
