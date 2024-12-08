@@ -68,7 +68,7 @@ class Perception(object):
     def process(self):
         image = self.parse_message()
         if image is None:
-            return None
+            return
         # Mask off a rectangle at position (395, 520) and size (234, 56) which is the main car itself.
         image = cv2.rectangle(image, (395, 520), (395 + 234, 520 + 56), BLACK, -1)
         # Mark the upper half as black.
@@ -78,32 +78,35 @@ class Perception(object):
         bev_image = self.wrap_bev(image)
         road_mask, ref_line = self.mark_road(bev_image)
         Topic.publish(Topic.PERCEPTION, {
+            # Static configs.
             'width': DST_WIDTH,
             'height': DST_HEIGHT,
+            'scale': SCALE,
+            # Frame data.
             'road_mask': road_mask.tolist(),
             'reference_line': ref_line.tolist(),
             'obstacles': obstacles,
-            'scale': SCALE,
         })
-
         if flags.FLAGS.show:
-            bev_image[road_mask == 255] = GREEN
-            bev_image[road_mask != 255] = BLACK
+            self.show(bev_image, road_mask, ref_line, obstacles)
 
-            for x, y in obstacles:
-                top_left = (x - OBSTABLE_SIZE[0] // 2, y - OBSTABLE_SIZE[1])
-                bot_right = (x + OBSTABLE_SIZE[0] // 2, y)
-                cv2.rectangle(bev_image, top_left, bot_right, RED, -1)
-            cv2.rectangle(bev_image, (DST_WIDTH // 2 - 10, DST_HEIGHT - 20), (DST_WIDTH // 2 + 10, DST_HEIGHT),
-                          YELLOW, -1)
+    def show(self, bev_image, road_mask, ref_line, obstacles):
+        bev_image[road_mask == 255] = GREEN
+        bev_image[road_mask != 255] = BLACK
+        cv2.rectangle(bev_image, (DST_WIDTH // 2 - 10, DST_HEIGHT - 20), (DST_WIDTH // 2 + 10, DST_HEIGHT), YELLOW, -1)
+        for x, y in obstacles:
+            top_left = (x - OBSTABLE_SIZE[0] // 2, y - OBSTABLE_SIZE[1])
+            bot_right = (x + OBSTABLE_SIZE[0] // 2, y)
+            cv2.rectangle(bev_image, top_left, bot_right, RED, -1)
 
-            model = np.poly1d(ref_line)
-            for y1 in range(0, DST_HEIGHT - 10, 20):
-                x1 = max(min(int(model(y1)), DST_WIDTH - 1), 0)
-                y2 = y1 + 10
-                x2 = max(min(int(model(y2)), DST_WIDTH - 1), 0)
-                cv2.line(bev_image, (x1, y1), (x2, y2), RED, 1)
-        return bev_image
+        model = np.poly1d(ref_line)
+        for y1 in range(0, DST_HEIGHT - 10, 20):
+            x1 = max(min(int(model(y1)), DST_WIDTH - 1), 0)
+            y2 = y1 + 10
+            x2 = max(min(int(model(y2)), DST_WIDTH - 1), 0)
+            cv2.line(bev_image, (x1, y1), (x2, y2), RED, 1)
+
+        cv2.imshow("Image", bev_image)
 
     def xy2bev(self, x, y):
         point = np.array([x + PADDING, y, 1], dtype=np.float32)
@@ -134,7 +137,10 @@ class Perception(object):
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
         # Smooth the mask.
         mask = cv2.GaussianBlur(mask, (9, 9), 0)
+        return mask, Perception.calc_reference_line(mask)
 
+    @staticmethod
+    def calc_reference_line(road_mask):
         # Regression for reference line.
         X = []
         Y = []
@@ -144,18 +150,20 @@ class Perception(object):
             right = DST_WIDTH - 1
             count = 0
             while left < right:
-                while mask[y, left] != 255 and left < right:
+                while road_mask[y, left] != 255 and left < right:
                     left += 1
-                while mask[y, right] != 255 and left < right:
+                while road_mask[y, right] != 255 and left < right:
                     right -= 1
-                left += 1
-                right -= 1
-                count += 2
-            if count > min_width:
+                if left < right:
+                    count += 2
+                    left += 1
+                    right -= 1
+                elif road_mask[y, left] == 255:
+                    count += 1
+            if count >= min_width:
                 X.append(left)
                 Y.append(y)
-        ref_line = np.polyfit(Y, X, 2) if len(X) > 2 else np.empty(0)
-        return mask, ref_line
+        return np.polyfit(Y, X, 2) if len(X) > 2 else np.empty(0)
 
 
 def main(argv):
@@ -164,9 +172,8 @@ def main(argv):
 
     timer = RecurringTimer(1.0 / PERCEPTION_FREQUENCY)
     while timer.wait():
-        bev_image = perception.process()
-        if flags.FLAGS.show and bev_image is not None:
-            cv2.imshow("Image", bev_image)
+        perception.process()
+        if flags.FLAGS.show:
             key = cv2.waitKey(1) & 0xFF
             if key == 27 or key == ord('q'):
                 break
