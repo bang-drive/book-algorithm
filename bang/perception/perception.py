@@ -1,5 +1,6 @@
 import os
 import threading
+import time
 
 from absl import app, flags
 from ultralytics import YOLO
@@ -12,8 +13,9 @@ from bang.common.topic import Topic
 
 flags.DEFINE_boolean('show', False, 'Show results.')
 
-PERCEPTION_FREQUENCY = 10
+FREQUENCY = 10
 MODEL = os.path.expanduser('~/.cache/yolo-models/yolo11x.pt')
+DESIRED_CLASSES = {'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck'}
 
 BLACK = (0, 0, 0)
 RED = (0, 0, 255)
@@ -75,48 +77,53 @@ class Perception(object):
         image[:image.shape[0] // 2, :] = BLACK
 
         obstacles = self.detect_obstacles(image)
-        bev_image = self.wrap_bev(image)
-        road_mask, ref_line = self.mark_road(bev_image)
+        image = self.wrap_bev(image)
+        road_mask, ref_line = self.mark_road(image)
         Topic.publish(Topic.PERCEPTION, {
             # Static configs.
             'width': DST_WIDTH,
             'height': DST_HEIGHT,
             'scale': SCALE,
             # Frame data.
+            'time': time.time(),
             'road_mask': road_mask.tolist(),
             'reference_line': ref_line.tolist(),
             'obstacles': obstacles,
         })
         if flags.FLAGS.show:
-            self.show(bev_image, road_mask, ref_line, obstacles)
+            self.show(image, road_mask, ref_line, obstacles)
 
-    def show(self, bev_image, road_mask, ref_line, obstacles):
-        bev_image[road_mask == 255] = GREEN
-        bev_image[road_mask != 255] = BLACK
-        cv2.rectangle(bev_image, (DST_WIDTH // 2 - 10, DST_HEIGHT - 20), (DST_WIDTH // 2 + 10, DST_HEIGHT), YELLOW, -1)
+    def show(self, image, road_mask, ref_line, obstacles):
+        image[road_mask == 255] = GREEN
+        image[road_mask != 255] = BLACK
+        cv2.rectangle(image, (DST_WIDTH // 2 - 10, DST_HEIGHT - 20), (DST_WIDTH // 2 + 10, DST_HEIGHT), YELLOW, -1)
         for x, y in obstacles:
-            top_left = (x - OBSTABLE_SIZE[0] // 2, y - OBSTABLE_SIZE[1])
-            bot_right = (x + OBSTABLE_SIZE[0] // 2, y)
-            cv2.rectangle(bev_image, top_left, bot_right, RED, -1)
+            top_left = (int(x - OBSTABLE_SIZE[0] / 2), int(y - OBSTABLE_SIZE[1]))
+            bot_right = (int(x + OBSTABLE_SIZE[0] / 2), int(y))
+            cv2.rectangle(image, top_left, bot_right, RED, -1)
 
-        model = np.poly1d(ref_line)
-        for y1 in range(0, DST_HEIGHT - 10, 20):
-            x1 = max(min(int(model(y1)), DST_WIDTH - 1), 0)
-            y2 = y1 + 10
-            x2 = max(min(int(model(y2)), DST_WIDTH - 1), 0)
-            cv2.line(bev_image, (x1, y1), (x2, y2), RED, 1)
+        if len(ref_line) > 0:
+            p = np.polynomial.Polynomial(ref_line[::-1])
+            for y1 in range(0, DST_HEIGHT - 10, 20):
+                x1 = max(min(int(p(y1)), DST_WIDTH - 1), 0)
+                y2 = y1 + 10
+                x2 = max(min(int(p(y2)), DST_WIDTH - 1), 0)
+                cv2.line(image, (x1, y1), (x2, y2), RED, 1)
 
-        cv2.imshow("Image", bev_image)
+        cv2.imshow('Perception', image)
 
     def xy2bev(self, x, y):
         point = np.array([x + PADDING, y, 1], dtype=np.float32)
         x, y, scale = np.matmul(self.M, point)
-        return int(x / scale), int(y / scale)
+        return (x / scale, y / scale)
 
     def detect_obstacles(self, image):
         obstacles = []
+        classes = self.yolo.names
         for result in self.yolo(image, verbose=False):
             for box in result.boxes:
+                if classes[int(box.cls[0])] not in DESIRED_CLASSES:
+                    continue
                 xyxy = box.xyxy.cpu()[0]
                 x, y = self.xy2bev((xyxy[0] + xyxy[2]) / 2, xyxy[3])
                 if 0 <= x < DST_WIDTH and 0 <= y < DST_HEIGHT:
@@ -145,7 +152,7 @@ class Perception(object):
         X = []
         Y = []
         min_width = 100
-        for y in range(150, 350, 20):
+        for y in range(0, 320, 16):
             left = 0
             right = DST_WIDTH - 1
             count = 0
@@ -165,18 +172,19 @@ class Perception(object):
                 Y.append(y)
         return np.polyfit(Y, X, 2) if len(X) > 2 else np.empty(0)
 
+    def start(self):
+        threading.Thread(target=self.message_receiver).start()
+        timer = RecurringTimer(1.0 / FREQUENCY)
+        while timer.wait():
+            self.process()
+            if flags.FLAGS.show:
+                key = cv2.waitKey(1) & 0xFF
+                if key == 27 or key == ord('q'):
+                    break
+
 
 def main(argv):
-    perception = Perception()
-    threading.Thread(target=perception.message_receiver).start()
-
-    timer = RecurringTimer(1.0 / PERCEPTION_FREQUENCY)
-    while timer.wait():
-        perception.process()
-        if flags.FLAGS.show:
-            key = cv2.waitKey(1) & 0xFF
-            if key == 27 or key == ord('q'):
-                break
+    Perception().start()
 
 
 if __name__ == '__main__':
