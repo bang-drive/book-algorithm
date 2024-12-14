@@ -14,4 +14,27 @@ py_binary(
 
 py_import_test("dragon_planner")
 
+py_binary(
+    name = "planning",
+    srcs = ["planning.py"],
+    deps = [
+        ":quintic_planner",
+        "//bang/common:timer",
+        "//bang/common:topic",
+        requirement("absl-py"),
+        requirement("opencv-python"),
+        requirement("numpy"),
+    ],
+)
+
+py_import_test("planning")
+
+py_library(
+    name = "quintic_planner",
+    srcs = ["quintic_planner.py"],
+    deps = [
+        requirement("numpy"),
+    ],
+)
+
 lint()

@@ -80,11 +80,7 @@ class Perception(object):
         image = self.wrap_bev(image)
         road_mask, ref_line = self.mark_road(image)
         Topic.publish(Topic.PERCEPTION, {
-            # Static configs.
-            'width': DST_WIDTH,
-            'height': DST_HEIGHT,
             'scale': SCALE,
-            # Frame data.
             'time': time.time(),
             'road_mask': road_mask.tolist(),
             'reference_line': ref_line.tolist(),

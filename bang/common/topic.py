@@ -16,6 +16,7 @@ class Topic(object):
     CONTROL = '/bang/control'
     PERCEPTION = '/bang/perception'
     PREDICTION = '/bang/prediction'
+    PLANNING = '/bang/planning'
 
     @staticmethod
     def publish(topic, data):

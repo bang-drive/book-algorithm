@@ -12,6 +12,7 @@ from bang.common.topic import Topic
 flags.DEFINE_boolean('show', False, 'Show results.')
 
 FREQUENCY = 10
+PREDICTION_TIME = 0.5
 OBSTABLE_SIZE = (20, 40)
 RED = (0, 0, 255)
 PINK = (255, 0, 255)
@@ -54,46 +55,55 @@ class Prediction(object):
         if results is None:
             return
         last_perception, current_perception, chasiss = results
-        speed = self.estimate_others_speed(last_perception, current_perception, chasiss)
-        obstacles = self.predict_n_seconds_later(0.5, current_perception, speed)
+        road_mask = np.array(current_perception['road_mask'])
+        speed = self.estimate_others_speed(last_perception, current_perception, chasiss, road_mask)
+        obstacles = self.predict_n_seconds_later(PREDICTION_TIME, current_perception, speed, road_mask)
         Topic.publish(Topic.PREDICTION, {
+            'prediction_time': PREDICTION_TIME,
             'obstacles': obstacles,
         })
         if flags.FLAGS.show:
+            # Draw road.
+            height, width = road_mask.shape
+            image = np.zeros((height, width, 3), dtype=np.uint8)
+            image[road_mask == 255] = GREEN
+            image[road_mask != 255] = BLACK
+            # Draw reference line.
+            if ref_line := current_perception['reference_line']:
+                p = np.polynomial.Polynomial(ref_line[::-1])
+                for y1 in range(0, height - 10, 20):
+                    x1 = max(min(int(p(y1)), width - 1), 0)
+                    y2 = y1 + 10
+                    x2 = max(min(int(p(y2)), width - 1), 0)
+                    cv2.line(image, (x1, y1), (x2, y2), RED, 1)
+
+            # Draw ADC.
+            cv2.rectangle(image, (width // 2 - 10, height - 20), (width // 2 + 10, height), YELLOW, -1)
+
+            # Draw perception obstacles.
             pred_obstacles = {(int(x), int(y)): (int(pred_x), int(pred_y)) for x, y, pred_x, pred_y in obstacles}
-            image = np.zeros((current_perception['height'], current_perception['width'], 3), dtype=np.uint8)
-            mask = np.array(current_perception['road_mask'])
-            image[mask == 255] = GREEN
-            image[mask != 255] = BLACK
-            cv2.rectangle(image, (current_perception['width'] // 2 - 10, current_perception['height'] - 20),
-                                 (current_perception['width'] // 2 + 10, current_perception['height']), YELLOW, -1)
             for x, y in current_perception['obstacles']:
                 x, y = int(x), int(y)
                 top_left = (int(x - OBSTABLE_SIZE[0] / 2), int(y - OBSTABLE_SIZE[1]))
                 bot_right = (int(x + OBSTABLE_SIZE[0] / 2), int(y))
                 cv2.rectangle(image, top_left, bot_right, RED, -1)
+                # Draw predicted obstacles.
                 if (pred_xy := pred_obstacles.get((x, y))) is not None:
                     x, y = pred_xy
                     top_left = (int(x - OBSTABLE_SIZE[0] / 2), int(y - OBSTABLE_SIZE[1]))
                     bot_right = (int(x + OBSTABLE_SIZE[0] / 2), int(y))
                     cv2.rectangle(image, top_left, bot_right, PINK, -1)
-            if current_perception['reference_line']:
-                p = np.polynomial.Polynomial(current_perception['reference_line'][::-1])
-                for y1 in range(0, current_perception['height'] - 10, 20):
-                    x1 = max(min(int(p(y1)), current_perception['width'] - 1), 0)
-                    y2 = y1 + 10
-                    x2 = max(min(int(p(y2)), current_perception['width'] - 1), 0)
-                    cv2.line(image, (x1, y1), (x2, y2), RED, 1)
             cv2.imshow('Prediction', image)
 
     @staticmethod
-    def estimate_others_speed(perception0, perception1, chasiss):
-        adc_speed = np.linalg.norm((chasiss['speed']['x'], chasiss['speed']['z'])) * perception1['scale']
+    def estimate_others_speed(perception0, perception1, chasiss, road_mask):
+        adc_speed = max(np.linalg.norm((chasiss['speed']['x'], chasiss['speed']['z'])) * perception1['scale'], 100)
         if len(perception0['obstacles']) == 0 or len(perception1['obstacles']) == 0:
             return adc_speed
         t = perception1['time'] - perception0['time']
 
-        adc_pos1 = (perception1['width'] / 2, perception1['height'])
+        height, width = road_mask.shape
+        adc_pos1 = (width / 2, height)
         others_pos1 = (adc_pos1[0] + np.mean([pos[0] - adc_pos1[0] for pos in perception1['obstacles']]),
                        adc_pos1[1] + np.mean([pos[1] - adc_pos1[1] for pos in perception1['obstacles']]))
         adc_pos0 = (adc_pos1[0], adc_pos1[1] + adc_speed * t)
@@ -101,20 +111,22 @@ class Prediction(object):
                        adc_pos0[1] + np.mean([pos[1] - adc_pos0[1] for pos in perception0['obstacles']]))
         return np.linalg.norm((others_pos1[0] - others_pos0[0], others_pos1[1] - others_pos0[1])) / t
 
-    def predict_n_seconds_later(self, n, perception, speed):
+    def predict_n_seconds_later(self, n, perception, speed, road_mask):
         ref_line = perception['reference_line']
         if not ref_line:
             return []
+        derive = np.polyder(ref_line)
 
+        height, width = road_mask.shape
         obstacles = []
         for x, y in perception['obstacles']:
-            heading = (2 * ref_line[0] * y + ref_line[1], -1)
+            heading = (np.polyval(derive, y), -1)
             heading /= np.linalg.norm(heading)
             pred_x = x + heading[0] * speed * n
-            if pred_x < 0 or pred_x >= perception['width']:
+            if pred_x < 0 or pred_x >= width:
                 continue
             pred_y = y + heading[1] * speed * n
-            if pred_y < 0 or pred_y >= perception['height']:
+            if pred_y < 0 or pred_y >= height:
                 continue
             obstacles.append((x, y, pred_x, pred_y))
         return obstacles
