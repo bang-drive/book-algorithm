@@ -11,7 +11,6 @@ py_binary(
         "//bang/common:topic",
         requirement("absl-py"),
         requirement("numpy"),
-        requirement("opencv-python"),
     ],
 )
 
