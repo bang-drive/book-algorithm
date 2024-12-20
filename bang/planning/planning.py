@@ -8,10 +8,12 @@ import numpy as np
 
 from bang.common.timer import RecurringTimer
 from bang.common.topic import Topic
+from bang.control.control import Control
 from bang.planning.cubic_planner import CubicPlanner
 
 
 flags.DEFINE_boolean('show', False, 'Show results.')
+flags.DEFINE_boolean('direct_control', False, 'Directly send control message.')
 
 FREQUENCY = 10
 OBSTABLE_SIZE = (20, 40)
@@ -60,10 +62,15 @@ class Planning(object):
         height, width = road_mask.shape
         planner = CubicPlanner(road_mask)
         trajectory = planner.plan(perception, chasiss, prediction)
-        Topic.publish(Topic.PLANNING, {
+        result = {
             'source': 'cubic_planner',
             'trajectory': trajectory,
-        })
+        }
+        if flags.FLAGS.direct_control:
+            if control := Control.planning_to_control(result):
+                Topic.publish(Topic.CONTROL, control)
+        else:
+            Topic.publish(Topic.PLANNING, result)
 
         if flags.FLAGS.show:
             # Draw road.

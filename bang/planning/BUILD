@@ -29,6 +29,7 @@ py_binary(
         ":cubic_planner",
         "//bang/common:timer",
         "//bang/common:topic",
+        "//bang/control",
         requirement("absl-py"),
         requirement("opencv-python"),
         requirement("numpy"),

@@ -2,4 +2,4 @@
 
 bazel run //bang/perception &
 bazel run //bang/prediction &
-bazel run //bang/planning -- --show
+bazel run //bang/planning -- --show --direct_control
