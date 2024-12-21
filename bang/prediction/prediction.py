@@ -9,7 +9,8 @@ from bang.common.topic import Topic
 
 
 FREQUENCY = 10
-PREDICTION_TIME = [0.1, 0.2, 0.3, 0.4, 0.5]
+PREDICTION_STEP = 0.1
+PREDICTION_RANGE = 0.5
 
 
 class Prediction(object):
@@ -50,12 +51,17 @@ class Prediction(object):
         speed = self.estimate_others_speed(prev_perception, perception, chasiss, road_mask)
         prediction = {
             'time_sequence': [],
-            'results': []
+            'obstacles': []
         }
-        now = perception['time']
-        for t in PREDICTION_TIME:
-            prediction['time_sequence'].append(now + t)
-            prediction['results'].append(self.predict_n_seconds_later(t, perception, speed, road_mask))
+        if (ref_line := perception['reference_line']) and (obstacles := perception['obstacles']):
+            ref_line_derive = np.polyder(ref_line)
+            now = perception['time']
+            for t in np.arange(PREDICTION_STEP, PREDICTION_RANGE + PREDICTION_STEP / 2, PREDICTION_STEP):
+                obstacles = self.predict_n_seconds_later(PREDICTION_STEP, road_mask, obstacles, speed, ref_line_derive)
+                if len(obstacles) == 0:
+                    break
+                prediction['time_sequence'].append(now + t)
+                prediction['obstacles'].append(obstacles)
         Topic.publish(Topic.PREDICTION, prediction)
 
     @staticmethod
@@ -74,21 +80,16 @@ class Prediction(object):
                        adc_pos0[1] + np.mean([pos[1] - adc_pos0[1] for pos in prev_perception['obstacles']]))
         return np.linalg.norm((others_pos1[0] - others_pos0[0], others_pos1[1] - others_pos0[1])) / t
 
-    def predict_n_seconds_later(self, n, perception, speed, road_mask):
-        ref_line = perception['reference_line']
-        if not ref_line:
-            return []
-        derive = np.polyder(ref_line)
-
+    def predict_n_seconds_later(self, t, road_mask, obstacles, speed, ref_line_derive):
         height, width = road_mask.shape
         obstacles = []
-        for x, y in perception['obstacles']:
-            heading = (np.polyval(derive, y), -1)
+        for x, y in obstacles:
+            heading = (-np.polyval(ref_line_derive, y), -1)
             heading /= np.linalg.norm(heading)
-            pred_x = x + heading[0] * speed * n
+            pred_x = x + heading[0] * speed * t
             if pred_x < 0 or pred_x >= width:
                 continue
-            pred_y = y + heading[1] * speed * n
+            pred_y = y + heading[1] * speed * t
             if pred_y < 0 or pred_y >= height:
                 continue
             obstacles.append((pred_x, pred_y))

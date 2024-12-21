@@ -85,7 +85,7 @@ class CubicPlanner(object):
                 continue
             y0 = adc_speed * offset
             x0 = poly(y0)
-            for x1, y1 in prediction['results'][index]:
+            for x1, y1 in prediction['obstacles'][index]:
                 if np.linalg.norm((x1 - x0, y1 - y0)) < SAFETY_BUFFER:
                     return False
         return True
