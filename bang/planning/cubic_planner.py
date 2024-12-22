@@ -60,7 +60,7 @@ class CubicPlanner(object):
         c = ((x1 - a * y1 ** 3 - b * y1 ** 2) - (x2 - a * y2 ** 3 - b * y2 ** 2)) / (y1 - y2)
         d = x1 - a * y1 ** 3 - b * y1 ** 2 - c * y1
         poly = np.polynomial.Polynomial([d, c, b, a])
-        if not self.check_collision(poly, adc_speed, prediction):
+        if self.has_collision(poly, adc_speed, prediction):
             return trajectory, sys.float_info.max
 
         distance = 0
@@ -77,7 +77,7 @@ class CubicPlanner(object):
         # Use distance as cost.
         return trajectory, distance
 
-    def check_collision(self, poly, adc_speed, prediction):
+    def has_collision(self, poly, adc_speed, prediction):
         now = time.time()
         for index, t in enumerate(prediction['time_sequence']):
             offset = t - now
@@ -87,5 +87,5 @@ class CubicPlanner(object):
             x0 = poly(y0)
             for x1, y1 in prediction['obstacles'][index]:
                 if np.linalg.norm((x1 - x0, y1 - y0)) < SAFETY_BUFFER:
-                    return False
-        return True
+                    return True
+        return False

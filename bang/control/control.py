@@ -23,7 +23,7 @@ class Control(object):
             with self.message_lock:
                 self.planning = message
 
-    def parse_messages(self):
+    def parse_message(self):
         with self.message_lock:
             if self.planning is None:
                 return None
@@ -32,24 +32,21 @@ class Control(object):
             return self.planning.copy()
 
     def process(self):
-        planning = self.parse_messages()
-        if planning is None:
-            return
-        if control := self.planning_to_control(planning):
-            Topic.publish(Topic.CONTROL, control)
+        if planning := self.parse_message():
+            self.run_once(planning)
 
     @staticmethod
-    def planning_to_control(planning):
+    def run_once(planning):
         trajectory = planning['trajectory']
-        if len(trajectory) > 1:
-            steer = int((trajectory[1][0] - WIDTH / 2) / 24 * CONTROL_MAX)
-            steer = max(min(steer, CONTROL_MAX), -CONTROL_MAX)
-            return {
-                'source': planning['source'],
-                'steer': steer,
-                'pedal': CONTROL_MAX,
-            }
-        return None
+        if len(trajectory) <= 1:
+            return
+        steer = int((trajectory[1][0] - WIDTH / 2) / 24 * CONTROL_MAX)
+        steer = max(min(steer, CONTROL_MAX), -CONTROL_MAX)
+        Topic.publish(Topic.CONTROL, {
+            'source': planning['source'],
+            'steer': steer,
+            'pedal': CONTROL_MAX,
+        })
 
     def start(self):
         threading.Thread(target=self.message_receiver).start()

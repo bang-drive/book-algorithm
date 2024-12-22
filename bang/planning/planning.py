@@ -54,10 +54,10 @@ class Planning(object):
             return self.perception.copy(), self.chasiss.copy(), self.prediction.copy()
 
     def process(self):
-        results = self.parse_messages()
-        if results is None:
+        messages = self.parse_messages()
+        if messages is None:
             return
-        perception, chasiss, prediction = results
+        perception, chasiss, prediction = messages
         road_mask = np.array(perception['road_mask'])
         height, width = road_mask.shape
         planner = CubicPlanner(road_mask)
@@ -67,8 +67,7 @@ class Planning(object):
             'trajectory': trajectory,
         }
         if flags.FLAGS.direct_control:
-            if control := Control.planning_to_control(result):
-                Topic.publish(Topic.CONTROL, control)
+            Control.run_once(result)
         else:
             Topic.publish(Topic.PLANNING, result)
 

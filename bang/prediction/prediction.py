@@ -43,13 +43,13 @@ class Prediction(object):
             return self.prev_perception.copy(), self.perception.copy(), self.chasiss.copy()
 
     def process(self):
-        results = self.parse_messages()
-        if results is None:
+        messages = self.parse_messages()
+        if messages is None:
             return
-        prev_perception, perception, chasiss = results
+        prev_perception, perception, chasiss = messages
         road_mask = np.array(perception['road_mask'])
-        speed = self.estimate_others_speed(prev_perception, perception, chasiss, road_mask)
-        prediction = {
+        speed = self.estimate_speed(prev_perception, perception, chasiss['speed'])
+        result = {
             'time_sequence': [],
             'obstacles': []
         }
@@ -57,30 +57,29 @@ class Prediction(object):
             ref_line_derive = np.polyder(ref_line)
             now = perception['time']
             for t in np.arange(PREDICTION_STEP, PREDICTION_RANGE + PREDICTION_STEP / 2, PREDICTION_STEP):
-                obstacles = self.predict_n_seconds_later(PREDICTION_STEP, road_mask, obstacles, speed, ref_line_derive)
+                obstacles = self.predict(PREDICTION_STEP, road_mask, obstacles, speed, ref_line_derive)
                 if len(obstacles) == 0:
                     break
-                prediction['time_sequence'].append(now + t)
-                prediction['obstacles'].append(obstacles)
-        Topic.publish(Topic.PREDICTION, prediction)
+                result['time_sequence'].append(now + t)
+                result['obstacles'].append(obstacles)
+        Topic.publish(Topic.PREDICTION, result)
 
     @staticmethod
-    def estimate_others_speed(prev_perception, perception, chasiss, road_mask):
-        adc_speed = max(np.linalg.norm((chasiss['speed']['x'], chasiss['speed']['z'])) * perception['scale'], 100)
+    def estimate_speed(prev_perception, perception, speed):
+        adc_speed = np.linalg.norm((speed['x'], speed['z'])) * perception['scale']
         if len(prev_perception['obstacles']) == 0 or len(perception['obstacles']) == 0:
+            # Best guess as the adc speed.
             return adc_speed
         t = perception['time'] - prev_perception['time']
 
-        height, width = road_mask.shape
-        adc_pos1 = (width / 2, height)
-        others_pos1 = (adc_pos1[0] + np.mean([pos[0] - adc_pos1[0] for pos in perception['obstacles']]),
-                       adc_pos1[1] + np.mean([pos[1] - adc_pos1[1] for pos in perception['obstacles']]))
-        adc_pos0 = (adc_pos1[0], adc_pos1[1] + adc_speed * t)
-        others_pos0 = (adc_pos0[0] + np.mean([pos[0] - adc_pos0[0] for pos in prev_perception['obstacles']]),
-                       adc_pos0[1] + np.mean([pos[1] - adc_pos0[1] for pos in prev_perception['obstacles']]))
-        return np.linalg.norm((others_pos1[0] - others_pos0[0], others_pos1[1] - others_pos0[1])) / t
+        pos = (np.mean([pos[0] for pos in perception['obstacles']]),
+               np.mean([pos[1] for pos in perception['obstacles']]))
+        prev_pos = (np.mean([pos[0] for pos in prev_perception['obstacles']]),
+                    np.mean([pos[1] for pos in prev_perception['obstacles']]) + adc_speed * t)
+        s = np.linalg.norm((pos[0] - prev_pos[0], pos[1] - prev_pos[1]))
+        return s / t
 
-    def predict_n_seconds_later(self, t, road_mask, obstacles, speed, ref_line_derive):
+    def predict(self, t, road_mask, obstacles, speed, ref_line_derive):
         height, width = road_mask.shape
         obstacles = []
         for x, y in obstacles:
