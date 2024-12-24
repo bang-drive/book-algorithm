@@ -10,6 +10,7 @@ py_binary(
         "//bang/common:timer",
         "//bang/common:topic",
         requirement("absl-py"),
+        requirement("numpy"),
     ],
 )
 

@@ -58,10 +58,7 @@ class Planning(object):
         if messages is None:
             return
         perception, chasiss, prediction = messages
-        road_mask = np.array(perception['road_mask'])
-        height, width = road_mask.shape
-        planner = CubicPlanner(road_mask)
-        trajectory = planner.plan(perception, chasiss, prediction)
+        trajectory = CubicPlanner(perception, chasiss, prediction).plan()
         result = {
             'source': 'cubic_planner',
             'trajectory': trajectory,
@@ -73,6 +70,8 @@ class Planning(object):
 
         if flags.FLAGS.show:
             # Draw road.
+            road_mask = np.array(perception['road_mask'])
+            height, width = road_mask.shape
             image = np.zeros((height, width, 3), dtype=np.uint8)
             image[road_mask == 255] = GREEN
             image[road_mask != 255] = BLACK
@@ -96,8 +95,7 @@ class Planning(object):
         while timer.wait():
             self.process()
             if flags.FLAGS.show:
-                key = cv2.waitKey(1) & 0xFF
-                if key == 27 or key == ord('q'):
+                if (cv2.waitKey(1) & 0xFF) == ord('q'):
                     break
 
 

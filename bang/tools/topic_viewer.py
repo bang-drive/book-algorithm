@@ -32,17 +32,17 @@ def view_image():
     for message in Topic.subscribe(flags.FLAGS.topic):
         image = cv2.imdecode(np.frombuffer(message, dtype=np.uint8), cv2.IMREAD_COLOR)
         cv2.imshow("Image", image)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if (cv2.waitKey(1) & 0xFF) == ord('q'):
             break
 
 
 def main(argv):
-    target_topic = flags.FLAGS.topic
-    if target_topic == Topic.CAMERA:
-        logging.info(F'Viewing topic {target_topic} as IMAGE.')
+    topic = flags.FLAGS.topic
+    if topic == Topic.CAMERA:
+        logging.info(F'Viewing topic {topic} as IMAGE.')
         view_image()
-    elif target_topic is not None:
-        logging.info(F'Viewing topic {target_topic} as JSON.')
+    elif topic is not None:
+        logging.info(F'Viewing topic {topic} as JSON.')
         try:
             wrapper(view_json)
         except KeyboardInterrupt:

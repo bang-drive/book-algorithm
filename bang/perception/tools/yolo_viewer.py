@@ -61,9 +61,7 @@ def main(argv):
             image = cv2.imdecode(np.frombuffer(message, dtype=np.uint8), cv2.IMREAD_COLOR)
             image = yolo.process(image)
             cv2.imshow("Image", image)
-            # Quit on ESC or 'q'.
-            key = cv2.waitKey(1) & 0xFF
-            if key == 27 or key == ord('q'):
+            if (cv2.waitKey(1) & 0xFF) == ord('q'):
                 break
 
 

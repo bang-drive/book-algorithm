@@ -2,6 +2,7 @@ import json
 import threading
 
 from absl import app
+import numpy as np
 
 from bang.common.timer import RecurringTimer
 from bang.common.topic import Topic
@@ -40,8 +41,7 @@ class Control(object):
         trajectory = planning['trajectory']
         if len(trajectory) <= 1:
             return
-        steer = int((trajectory[1][0] - WIDTH / 2) / 24 * CONTROL_MAX)
-        steer = max(min(steer, CONTROL_MAX), -CONTROL_MAX)
+        steer = np.clip(int((trajectory[1][0] - WIDTH / 2) / 24), -1, 1) * CONTROL_MAX
         Topic.publish(Topic.CONTROL, {
             'source': planning['source'],
             'steer': steer,

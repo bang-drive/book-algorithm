@@ -101,9 +101,9 @@ class Perception(object):
         if len(ref_line) > 0:
             p = np.polynomial.Polynomial(ref_line[::-1])
             for y1 in range(0, DST_HEIGHT - 10, 20):
-                x1 = max(min(int(p(y1)), DST_WIDTH - 1), 0)
+                x1 = np.clip(int(p(y1)), 0, DST_WIDTH - 1)
                 y2 = y1 + 10
-                x2 = max(min(int(p(y2)), DST_WIDTH - 1), 0)
+                x2 = np.clip(int(p(y2)), 0, DST_WIDTH - 1)
                 cv2.line(image, (x1, y1), (x2, y2), RED, 1)
 
         cv2.imshow('Perception', image)
@@ -174,8 +174,7 @@ class Perception(object):
         while timer.wait():
             self.process()
             if flags.FLAGS.show:
-                key = cv2.waitKey(1) & 0xFF
-                if key == 27 or key == ord('q'):
+                if (cv2.waitKey(1) & 0xFF) == ord('q'):
                     break
 
 
