@@ -1,4 +1,5 @@
 import json
+import math
 import threading
 
 from absl import app
@@ -76,8 +77,7 @@ class Prediction(object):
                np.mean([pos[1] for pos in perception['obstacles']]))
         prev_pos = (np.mean([pos[0] for pos in prev_perception['obstacles']]),
                     np.mean([pos[1] for pos in prev_perception['obstacles']]) + adc_speed * t)
-        s = np.linalg.norm((pos[0] - prev_pos[0], pos[1] - prev_pos[1]))
-        return s / t
+        return math.dist(pos, prev_pos) / t
 
     def predict(self, t, road_mask, obstacles, speed, ref_line_derive):
         height, width = road_mask.shape

@@ -41,7 +41,7 @@ class Control(object):
         trajectory = planning['trajectory']
         if len(trajectory) <= 1:
             return
-        steer = np.clip(int((trajectory[1][0] - WIDTH / 2) / 24), -1, 1) * CONTROL_MAX
+        steer = int(np.clip((trajectory[1][0] - WIDTH / 2) / 24, -1.0, 1.0) * CONTROL_MAX)
         Topic.publish(Topic.CONTROL, {
             'source': planning['source'],
             'steer': steer,

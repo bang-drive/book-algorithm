@@ -4,9 +4,15 @@ load("//bang/tools:lint.bzl", "lint", "py_import_test")
 package(default_visibility = ["//visibility:public"])
 
 py_library(
+    name = "conf",
+    srcs = ["conf.py"],
+)
+
+py_library(
     name = "cubic_planner",
     srcs = ["cubic_planner.py"],
     deps = [
+        ":conf",
         requirement("numpy"),
     ],
 )
