@@ -12,7 +12,7 @@ sudo apt install -y \
 
 # Install Bazelisk.
 if ! [ -x "$(command -v bazelisk)" ]; then
-    sudo wget -O /usr/bin/bazelisk https://github.com/bazelbuild/bazelisk/releases/download/v1.22.0/bazelisk-linux-amd64
+    sudo wget -O /usr/bin/bazelisk https://github.com/bazelbuild/bazelisk/releases/download/v1.25.0/bazelisk-linux-amd64
     sudo chmod a+x /usr/bin/bazelisk
     sudo ln -sf /usr/bin/bazelisk /usr/bin/bazel
 fi
