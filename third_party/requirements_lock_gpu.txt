@@ -1,5 +1,5 @@
 --extra-index-url https://download.pytorch.org/whl/cu124
-absl-py==2.1.0
+absl-py==2.2.2
 getkey==0.6.5
 lapx==0.5.11.post1
 numpy==2.1.1
@@ -8,20 +8,20 @@ pillow==11.1.0
 redis==5.2.1
 torch==2.6.0+cu124
 torchvision==0.21.0+cu124
-ultralytics==8.3.78
+ultralytics==8.3.107
 ## The following requirements were added by pip freeze:
 certifi==2025.1.31
 charset-normalizer==3.4.1
 contourpy==1.3.1
 cycler==0.12.1
 filelock==3.13.1
-fonttools==4.56.0
+fonttools==4.57.0
 fsspec==2024.6.1
 idna==3.10
 Jinja2==3.1.4
 kiwisolver==1.4.8
 MarkupSafe==2.1.5
-matplotlib==3.10.0
+matplotlib==3.10.1
 mpmath==1.3.0
 networkx==3.3
 nvidia-cublas-cu12==12.4.5.8
@@ -41,12 +41,12 @@ packaging==24.2
 pandas==2.2.3
 psutil==7.0.0
 py-cpuinfo==9.0.0
-pyparsing==3.2.1
+pyparsing==3.2.3
 python-dateutil==2.9.0.post0
-pytz==2025.1
+pytz==2025.2
 PyYAML==6.0.2
 requests==2.32.3
-scipy==1.15.1
+scipy==1.15.2
 seaborn==0.13.2
 setuptools==70.2.0
 six==1.17.0
@@ -54,6 +54,6 @@ sympy==1.13.1
 tqdm==4.67.1
 triton==3.2.0
 typing_extensions==4.12.2
-tzdata==2025.1
+tzdata==2025.2
 ultralytics-thop==2.0.14
-urllib3==2.3.0
+urllib3==2.4.0

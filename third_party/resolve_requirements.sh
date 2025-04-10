@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
+# Usage:
+#    ./resolve_requirements.sh [hint]
+# <hint> can be "CPU" or "GPU". If not given, the script will decide automatically.
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
+HINT=$1
 VENV_DIR="/tmp/venv-$(date +%Y%m%d-%H%M%S)"
 
 if [ ! -d "${VENV_DIR}" ]; then
@@ -10,7 +14,7 @@ fi
 source "${VENV_DIR}/bin/activate"
 
 CPU_ONLY=false
-if [ -x "$(command -v nvidia-smi)" ]; then
+if [[ "${HINT}" = "GPU" || ( -z "${HINT}" && -x "$(command -v nvidia-smi)" ) ]]; then
     ln -sf requirements_lock_gpu.txt requirements_lock.txt
 else
     CPU_ONLY=true
