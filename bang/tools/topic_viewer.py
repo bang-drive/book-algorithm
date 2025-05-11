@@ -47,7 +47,6 @@ def main(argv):
             wrapper(view_json)
         except KeyboardInterrupt:
             # Print the last screen before exit.
-            global LAST_SCREEN
             print(LAST_SCREEN)
 
 
