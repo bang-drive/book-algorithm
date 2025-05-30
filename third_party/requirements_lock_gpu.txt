@@ -1,21 +1,21 @@
 --extra-index-url https://download.pytorch.org/whl/cu124
-absl-py==2.2.2
+absl-py==2.3.0
 getkey==0.6.5
 lapx==0.5.11.post1
-numpy==2.2.5
+numpy==2.2.6
 opencv-python==4.11.0.86
 pillow==11.2.1
-redis==6.0.0
+redis==6.2.0
 torch==2.7.0
 torchvision==0.22.0
-ultralytics==8.3.131
+ultralytics==8.3.146
 ## The following requirements were added by pip freeze:
 certifi==2025.4.26
 charset-normalizer==3.4.2
 contourpy==1.3.2
 cycler==0.12.1
 filelock==3.13.1
-fonttools==4.58.0
+fonttools==4.58.1
 fsspec==2024.6.1
 idna==3.10
 Jinja2==3.1.4
@@ -48,7 +48,6 @@ pytz==2025.2
 PyYAML==6.0.2
 requests==2.32.3
 scipy==1.15.3
-seaborn==0.13.2
 setuptools==70.2.0
 six==1.17.0
 sympy==1.14.0
