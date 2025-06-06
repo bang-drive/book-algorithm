@@ -6,9 +6,9 @@ numpy==2.2.6
 opencv-python==4.11.0.86
 pillow==11.2.1
 redis==6.2.0
-torch==2.7.0
-torchvision==0.22.0
-ultralytics==8.3.146
+torch==2.7.1
+torchvision==0.22.1
+ultralytics==8.3.151
 ## The following requirements were added by pip freeze:
 certifi==2025.4.26
 charset-normalizer==3.4.2
@@ -39,7 +39,7 @@ nvidia-nccl-cu12==2.26.2
 nvidia-nvjitlink-cu12==12.6.85
 nvidia-nvtx-cu12==12.6.77
 packaging==25.0
-pandas==2.2.3
+pandas==2.3.0
 psutil==7.0.0
 py-cpuinfo==9.0.0
 pyparsing==3.2.3
@@ -52,7 +52,7 @@ setuptools==70.2.0
 six==1.17.0
 sympy==1.14.0
 tqdm==4.67.1
-triton==3.3.0
+triton==3.3.1
 typing_extensions==4.12.2
 tzdata==2025.2
 ultralytics-thop==2.0.14
