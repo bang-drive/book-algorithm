@@ -10,11 +10,10 @@ import numpy as np
 from bang.common.topic import Topic
 
 
-LAST_FRAME = None
-
-
 # Save camera shot to <data_dir>/YYMMDD_HHMMSS_MS.jpg
 flags.DEFINE_string('data_dir', '.', 'Directory to save images.')
+
+LAST_FRAME = None
 
 
 def camera_receiver():
@@ -24,7 +23,6 @@ def camera_receiver():
 
 
 def save_image():
-    global LAST_FRAME
     if LAST_FRAME is None:
         logging.error('No camera frame received.')
         return

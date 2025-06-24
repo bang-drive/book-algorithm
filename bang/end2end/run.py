@@ -52,7 +52,6 @@ def camera_receiver():
 
 
 def control_publisher():
-    global CURRENT_STEER
     timer = RecurringTimer(1.0 / CONTROL_FREQUENCY)
     while timer.wait():
         Topic.publish(Topic.CONTROL, {
