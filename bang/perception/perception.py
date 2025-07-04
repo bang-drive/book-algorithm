@@ -169,7 +169,7 @@ class Perception(object):
         return np.polyfit(Y, X, 2) if len(X) > 2 else np.empty(0)
 
     def start(self):
-        threading.Thread(target=self.message_receiver).start()
+        threading.Thread(target=self.message_receiver, daemon=True).start()
         timer = RecurringTimer(1.0 / FREQUENCY)
         while timer.wait():
             self.process()

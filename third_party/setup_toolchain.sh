@@ -32,3 +32,5 @@ else
     # No GPU available, resolve a local CPU-only lock file instead of the managed GPU version.
     bash resolve_requirements.sh
 fi
+
+echo "export PYTHONPATH=\${PYTHONPATH}:$(cd ..; pwd)" >> ~/.bashrc

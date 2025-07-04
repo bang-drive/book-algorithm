@@ -38,7 +38,7 @@ def save_image():
 
 
 def main(argv):
-    threading.Thread(target=camera_receiver).start()
+    threading.Thread(target=camera_receiver, daemon=True).start()
 
     while True:
         key = getkey()

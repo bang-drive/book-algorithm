@@ -28,7 +28,8 @@ python3 bang/planning/dragon_planner.py
 
 ## Upgrade third-party libraries
 
-From time to time, the third-party libraries may need to be upgraded, especially `ultralytics` which breaks often on old versions. You can do this easily by running the following command.
+From time to time, the third-party libraries may need to be upgraded, especially `ultralytics` which
+breaks often on old versions. You can do this easily by running the following command.
 
 
 ```bash

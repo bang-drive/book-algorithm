@@ -95,7 +95,7 @@ class Prediction(object):
         return obstacles
 
     def start(self):
-        threading.Thread(target=self.message_receiver).start()
+        threading.Thread(target=self.message_receiver, daemon=True).start()
         timer = RecurringTimer(1.0 / FREQUENCY)
         while timer.wait():
             self.process()

@@ -23,7 +23,7 @@ CURRENT_STEER = 'STRAIGHT'
 
 def camera_receiver():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = torch.load(os.path.join(os.path.dirname(__file__), 'model.pt'))
+    model = torch.load(os.path.join(os.path.dirname(__file__), 'model.pt'), weights_only=False)
     model.to(device)
     model.eval()
     output_to_steer = {
